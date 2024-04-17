@@ -34,10 +34,10 @@ pub fn pause_menu(rd: &mut RaylibDrawHandle, rng: &mut Random) {
 
         rd.draw_text(format!("Aspect: {}", unsafe{ASPECT}).as_str(), (rd.get_screen_width() / 2) - (130 / 2), (rd.get_screen_height() / 2) - (60 / 2) + 70, 24, Color::WHITE);
         // check if the left or right arrow keys are pressed
-        if rd.is_key_pressed(raylib::consts::KeyboardKey::KEY_LEFT) && unsafe{ASPECT >= 0} {
+        if rd.is_key_pressed(raylib::consts::KeyboardKey::KEY_LEFT) && unsafe{ASPECT > 1} {
             unsafe{ASPECT -= 1};
         } else
-        if rd.is_key_pressed(raylib::consts::KeyboardKey::KEY_RIGHT) && unsafe{ASPECT <= 50} {
+        if rd.is_key_pressed(raylib::consts::KeyboardKey::KEY_RIGHT) && unsafe{ASPECT < 50} {
             unsafe{ASPECT += 1};
         }
     }
