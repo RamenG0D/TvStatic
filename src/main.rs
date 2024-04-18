@@ -6,7 +6,10 @@ static mut PAUSED: bool = false;
 static mut ASPECT: i32 = 30;
 
 #[inline]
-pub fn pause_menu(rd: &mut RaylibDrawHandle, rng: &mut Random) {
+pub fn pause_menu(
+    rd: &mut RaylibDrawHandle, 
+    rng: &mut Random
+) {
     if rd.is_window_resized() {
         // refresh screen
         rd.clear_background(Color::BLACK);
@@ -50,15 +53,18 @@ fn main() {
     
     // create a random number generator (uses only pseudo-random numbers for speed!)
     let mut rng = Random::new();
+    
     while !rl.window_should_close() {
         // check if F11 key was pressed to toggle fullscreen
         if rl.is_key_pressed(raylib::consts::KeyboardKey::KEY_F11) { rl.toggle_fullscreen(); }
 
-        let mut rd: RaylibDrawHandle = rl.begin_drawing(&rt);
         // toggles the pause state
-        if rd.is_key_pressed(raylib::consts::KeyboardKey::KEY_P) {
+        if rl.is_key_pressed(raylib::consts::KeyboardKey::KEY_P) {
             unsafe{PAUSED = !PAUSED;}
         }
+        
+        let mut rd: RaylibDrawHandle = rl.begin_drawing(&rt);
+        rd.clear_background(Color::BLACK);
 
         // if the program is paused
         // draw a grey rectangle over the screen
@@ -67,29 +73,37 @@ fn main() {
         if unsafe{PAUSED} {
             rd.draw_rectangle(0, 0, rd.get_screen_width(), rd.get_screen_height(), Color::new(0, 0, 0, 10));
             pause_menu(&mut rd, &mut rng);
-
             continue;
         }
-        rd.clear_background(Color::BLACK);
+        
         draw_static(&mut rd, &mut rng);
     }
 }
 
 #[inline]
-fn draw_static(rd: &mut RaylibDrawHandle, rng: &mut Random) {
+fn draw_static(
+    rd: &mut RaylibDrawHandle, 
+    rng: &mut Random
+) {
     rng.new_seed();
+
     // we are going to draw each pixel as a rectangle so that we can avoid doing a draw call for each pixel
     // instead we can divide the screen into a grid of rectangles (determined by ASPECT) and draw each rectangle with a random color
-    let (w, h) = (rd.get_screen_width() / unsafe{ASPECT}, rd.get_screen_height() / unsafe{ASPECT});
+    let aspect = unsafe{ASPECT};
+    let (w, h) = (
+        rd.get_screen_width()  / aspect, 
+        rd.get_screen_height() / aspect
+    );
+
     for x in 0..w {
         for y in 0..h {
-            // rd.draw_pixel(x, y, random_color(&mut rng));
+            let color = rng.random_color();
             rd.draw_rectangle(
-                x * unsafe{ASPECT}, 
-                y * unsafe{ASPECT}, 
-                unsafe{ASPECT}, 
-                unsafe{ASPECT}, 
-                rng.random_color()
+                x * aspect, 
+                y * aspect, 
+                aspect, 
+                aspect, 
+                color
             );
         }
     }
