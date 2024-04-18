@@ -16,5 +16,3 @@ cargo build [--release](optional)
 ```
 
 and your done!
-
-note: the "--release" is a flag and doesnt need the '[' or ']' or the "(optional)" part just use `--release`
