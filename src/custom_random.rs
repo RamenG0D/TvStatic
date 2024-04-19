@@ -44,46 +44,75 @@ impl Random {
         next
     }
 
-    fn next(&mut self, bits: u32) -> u32 {
+    fn next(&mut self, bits: usize) -> usize {
         let nextseed = (self.seed.wrapping_mul(self.multiplier) + self.addend) & self.mask;
         self.seed = nextseed;
-        (nextseed >> (48 - bits)) as u32
+        (nextseed >> (48 - bits)) as usize
     }
 
-    pub fn prandom(&mut self) -> i32 {
-        self.next(32) as i32
+    fn next_float(&mut self) -> f64 {
+        self.next(26) as f64 / (1 << 26) as f64
     }
 
-    pub fn prandom_bound(&mut self, bound: i32) -> i32 {
+    /// Returns a random integer from -isize::MAX to isize::MAX
+    pub fn prandom(&mut self) -> isize {
+        self.next(32) as isize
+    }
+
+    pub fn prandom_bound(&mut self, bound: isize) -> isize {
         if bound <= 0 { panic!("bound must be positive"); }
         let r = self.next(31);
         let m = bound - 1;
         if (bound & m) == 0 {
-            ((bound as u64 * r as u64) >> 31) as i32
+            ((bound as u64 * r as u64) >> 31) as isize
         } else {
             let mut bits;
             let mut val;
             bits = self.next(31);
-            val = bits as i32 % bound;
-            while bits as i32 - val + m < 0 {
+            val = bits as isize % bound;
+            while bits as isize - val + m < 0 {
                 bits = self.next(31);
-                val = bits as i32 % bound;
+                val = bits as isize % bound;
             }
             val
         }
     }
 
-    pub fn prandom_range(&mut self, min: i32, max: i32) -> i32 {
-        if min >= max { panic!("min must be less than max"); }
-        self.prandom_bound(max - min + 1) + min
+    pub fn prandom_bound_float(&mut self, bound: f64) -> f64 {
+        if bound <= 0.0 { panic!("bound must be positive"); }
+        let r = self.next_float();
+        let m = bound - 1.0;
+        if (bound as isize & m as isize) == 0 {
+            bound * r
+        } else {
+            let mut bits;
+            let mut val;
+            bits = self.next_float();
+            val = bits % bound;
+            while bits - val + m < 0.0 {
+                bits = self.next_float();
+                val = bits % bound;
+            }
+            val
+        }
+    }
+
+    pub fn random_range_float(&mut self, range: std::ops::Range<f64>) -> f64 {
+        if range.start >= range.end { panic!("min must be less than max"); }
+        self.prandom_bound_float(range.end - range.start) + range.start
+    }
+
+    pub fn random_range(&mut self, range: std::ops::Range<isize>) -> isize {
+        if range.start >= range.end { panic!("min must be less than max"); }
+        self.prandom_bound(range.end - range.start + 1) + range.start
     }
 
     pub fn random_color(&mut self) -> Color {
         Color::new(
-            self.prandom_range(0, 255) as u8,
-            self.prandom_range(0, 255) as u8,
-            self.prandom_range(0, 255) as u8,
-            self.prandom_range(0, 255) as u8,
+            self.random_range(0..255) as u8,
+            self.random_range(0..255) as u8,
+            self.random_range(0..255) as u8,
+            self.random_range(0..255) as u8,
         )
     }
 }
