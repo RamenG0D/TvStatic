@@ -1,7 +1,7 @@
 pub mod custom_random;
 pub mod pause_menu;
 
-use pause_menu::{gui_pause_menu, init_gui_pause_menu, set_button, GuiPauseMenuState, BARS_BUTTON, FADE_BUTTON, LERP_BUTTON, RESUME_BUTTON, SPIRAL_BUTTON, STATIC_BUTTON, WS_BUTTON};
+use pause_menu::{gui_pause_menu, init_gui_pause_menu, set_button, GuiPauseMenuState, BARS_BUTTON, FADE_BUTTON, LERP_BUTTON, RESUME_BUTTON, SCROLL_BUTTON, SPIRAL_BUTTON, STATIC_BUTTON, WS_BUTTON};
 use raylib::{color::Color, drawing::{RaylibDraw, RaylibDrawHandle}, logging, math::lerp};
 use custom_random::Random;
 
@@ -19,7 +19,7 @@ fn toggle_paused() {
 static mut ASPECT: i32  = 30;
 
 type ScreenFn = fn(&mut RaylibDrawHandle, &mut Random);
-static mut DRAW_SCREEN: ScreenFn = draw_static;
+static mut DRAW_SCREEN: ScreenFn = |mut rd, mut rng| unsafe{ draw_moving(&mut rd, &mut rng); };
 
 fn main() {
     logging::set_trace_log(raylib::consts::TraceLogLevel::LOG_NONE); // disables logging
@@ -63,11 +63,9 @@ fn main() {
             if rd.is_key_pressed(raylib::consts::KeyboardKey::KEY_RIGHT) && unsafe{ASPECT < 50} {
                 unsafe{ASPECT += 1};
             }
-
-            continue;
+        } else {
+            unsafe{DRAW_SCREEN(&mut rd, &mut rng)};
         }
-        
-        unsafe{DRAW_SCREEN(&mut rd, &mut rng)};
     }
 }
 
@@ -99,7 +97,79 @@ fn setup_buttons() {unsafe{
         set_clear_screen(true);
         DRAW_SCREEN = draw_ws;
     });
+    set_button(SCROLL_BUTTON, || {
+        set_clear_screen(true);
+        DRAW_SCREEN = |rd, rng| draw_moving(rd, rng);
+    });
 }}
+
+unsafe fn draw_moving(
+    rd: &mut RaylibDrawHandle, 
+    rng: &mut Random
+) {
+    #[allow(non_upper_case_globals)] static mut pixels: Vec<Color> = Vec::new();
+    #[allow(non_upper_case_globals)] static mut veiw: usize = 0;
+    let aspect = ASPECT;
+    let (mut w, mut h) = ((rd.get_screen_width() / aspect) as usize, (rd.get_screen_height() / aspect) as usize);
+
+    //  we want to generate a PIXEL vec that contains a random color for each pixel + enoungh pixels to fill a second screen (that is the pixel buffer)
+    // we will then window over a portion and draw the pixels to the screen (when we reach the end of the buffer we will loop back to the start but keep our window position somewhat over the previous window)
+    // this will give the effect of the pixels moving across the screen forever
+    if unsafe{pixels.is_empty()} {
+        for _ in 0..(w * h) * 2 { unsafe{pixels.push(rng.random_color())}; }
+    }
+    // regenerate the pixel buffer if the window is resized
+    if rd.is_window_resized() || (w * h) * 2 != pixels.len() {
+        w = (rd.get_screen_width() / aspect)  as usize;
+        h = (rd.get_screen_height() / aspect) as usize;
+
+        pixels.clear();
+        for _ in 0..(w * h) * 2 { pixels.push(rng.random_color()); }
+        unsafe{veiw = 0;}
+
+        return;
+    }
+
+    rng.new_seed();
+
+    let window = &pixels[veiw..(w * h) + veiw];
+
+    use rayon::prelude::*;
+    let mut rectangles = vec![(0, 0, 0, 0, Color::default()); w * h];
+    rectangles.par_iter_mut().enumerate().for_each(|(i, rect)| {
+        let x = i % w;
+        let y = i / w;
+        let color = window[y * h + x];
+
+        *rect = (
+            (x * aspect as usize) as i32, 
+            (y * aspect as usize) as i32, 
+            aspect, 
+            aspect, 
+            color
+        );
+    });
+    for rect in rectangles {
+        rd.draw_rectangle(rect.0, rect.1, rect.2, rect.3, rect.4);
+    }
+
+    // for x in 0..w {
+    // for y in 0..h {
+    //     let color = window[y * h + x];
+
+    //     rd.draw_rectangle(
+    //         (x * aspect as usize) as i32, 
+    //         (y * aspect as usize) as i32, 
+    //         aspect, 
+    //         aspect, 
+    //         color
+    //     );
+    // }
+    // }
+
+    // apply the window offset (keeping in mind the aspect ratio of a screen, which may be different in width and height)
+    unsafe{veiw = (veiw + 1) % (w * h)};
+}
 
 fn draw_lerp(
     rd: &mut RaylibDrawHandle, 

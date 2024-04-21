@@ -9,10 +9,11 @@ pub const LERP_BUTTON: usize    = 3;
 pub const SPIRAL_BUTTON: usize  = 4;
 pub const STATIC_BUTTON: usize  = 5;
 pub const WS_BUTTON: usize      = 6;
+pub const SCROLL_BUTTON: usize  = 7;
 
 type ButtonFn = Box<dyn FnMut()>;
 
-static mut BUTTONS: [Option<ButtonFn>; 7] = 
+static mut BUTTONS: [Option<ButtonFn>; 8] = 
 [
     None, // resume_button
     None, // bars_button
@@ -21,6 +22,7 @@ static mut BUTTONS: [Option<ButtonFn>; 7] =
     None, // time-to-shine_button
     None, // static_button
     None, // whole-screen_button
+    None, // scroller_button
 ];
 
 #[derive(Copy, Clone)]
@@ -86,15 +88,15 @@ pub const fn init_gui_pause_menu() -> GuiPauseMenuState {
         };
     state.layout_recs[7] = Rectangle {
             x: 1.0,
+            y: 365.0,
+            width: 120.0,
+            height: 24.0,
+        };
+    state.layout_recs[8] = Rectangle {
+            x: 1.0,
             y: -200.0,
             width: 240.0,
             height: 48.0,
-        };
-    state.layout_recs[8] = Rectangle {
-            x: 528.0,
-            y: 312.0,
-            width: 120.0,
-            height: 24.0,
         };
     return state;
 }
@@ -151,7 +153,8 @@ pub fn gui_pause_menu(
     if rl.gui_button (moved[4], Some(rstr!("SPIRAL"       )))  {unsafe{ (get_button(SPIRAL_BUTTON).unwrap())();   }} else
     if rl.gui_button (moved[5], Some(rstr!("STATIC"       )))  {unsafe{ (get_button(STATIC_BUTTON).unwrap())();}} else
     if rl.gui_button (moved[6], Some(rstr!("WHOLE-SCREEN" ))) {unsafe{ (get_button(WS_BUTTON).unwrap())();     }} else
-    if rl.gui_spinner(moved[7], None, unsafe{&mut ASPECT}, 1, 50, (*state).spinner_edit_mode) {
+    if rl.gui_button (moved[7], Some(rstr!("SCROLLER"     ))) {unsafe{ (get_button(SCROLL_BUTTON).unwrap())();     }} else
+    if rl.gui_spinner(moved[8], None, unsafe{&mut ASPECT}, 1, 50, (*state).spinner_edit_mode) {
         (*state).spinner_edit_mode = !( (*state).spinner_edit_mode );
     }
 }
