@@ -1,3 +1,4 @@
+use std::ptr::addr_of_mut;
 use raylib::prelude::*;
 
 use crate::ASPECT;
@@ -136,25 +137,25 @@ pub fn gui_pause_menu(
     state: &mut GuiPauseMenuState
 ) {
     let moved = [
-        move_middle((*state).layout_recs[0],  rl),
-        move_middle((*state).layout_recs[1],  rl),
-        move_middle((*state).layout_recs[2],  rl),
-        move_middle((*state).layout_recs[3],  rl),
-        move_middle((*state).layout_recs[4],  rl),
-        move_middle((*state).layout_recs[5],  rl),
-        move_middle ((*state).layout_recs[6], rl),
-        move_middle((*state).layout_recs[7],  rl),
-        move_middle((*state).layout_recs[8],  rl)
+        move_middle((*state).layout_recs[0], rl),
+        move_middle((*state).layout_recs[1], rl),
+        move_middle((*state).layout_recs[2], rl),
+        move_middle((*state).layout_recs[3], rl),
+        move_middle((*state).layout_recs[4], rl),
+        move_middle((*state).layout_recs[5], rl),
+        move_middle((*state).layout_recs[6], rl),
+        move_middle((*state).layout_recs[7], rl),
+        move_middle((*state).layout_recs[8], rl)
     ];
-    if rl.gui_button (moved[0], Some(rstr!("Resume"       )))  {unsafe{ (get_button(RESUME_BUTTON).unwrap())();}} else
-    if rl.gui_button (moved[1], Some(rstr!("CRT-BARS"     )))  {unsafe{ (get_button(BARS_BUTTON).unwrap())();  }} else
-    if rl.gui_button (moved[2], Some(rstr!("FADE"         )))  {unsafe{ (get_button(FADE_BUTTON).unwrap())();  }} else
-    if rl.gui_button (moved[3], Some(rstr!("LERP"         )))  {unsafe{ (get_button(LERP_BUTTON).unwrap())();  }} else
-    if rl.gui_button (moved[4], Some(rstr!("SPIRAL"       )))  {unsafe{ (get_button(SPIRAL_BUTTON).unwrap())();   }} else
-    if rl.gui_button (moved[5], Some(rstr!("STATIC"       )))  {unsafe{ (get_button(STATIC_BUTTON).unwrap())();}} else
-    if rl.gui_button (moved[6], Some(rstr!("WHOLE-SCREEN" ))) {unsafe{ (get_button(WS_BUTTON).unwrap())();     }} else
+    if rl.gui_button (moved[0], Some(rstr!("Resume"       ))) {unsafe{ (get_button(RESUME_BUTTON).unwrap())();}}      else
+    if rl.gui_button (moved[1], Some(rstr!("CRT-BARS"     ))) {unsafe{ (get_button(BARS_BUTTON).unwrap())();  }}      else
+    if rl.gui_button (moved[2], Some(rstr!("FADE"         ))) {unsafe{ (get_button(FADE_BUTTON).unwrap())();  }}      else
+    if rl.gui_button (moved[3], Some(rstr!("LERP"         ))) {unsafe{ (get_button(LERP_BUTTON).unwrap())();  }}      else
+    if rl.gui_button (moved[4], Some(rstr!("SPIRAL"       ))) {unsafe{ (get_button(SPIRAL_BUTTON).unwrap())();   }}   else
+    if rl.gui_button (moved[5], Some(rstr!("STATIC"       ))) {unsafe{ (get_button(STATIC_BUTTON).unwrap())();}}      else
+    if rl.gui_button (moved[6], Some(rstr!("WHOLE-SCREEN" ))) {unsafe{ (get_button(WS_BUTTON).unwrap())();     }}     else
     if rl.gui_button (moved[7], Some(rstr!("SCROLLER"     ))) {unsafe{ (get_button(SCROLL_BUTTON).unwrap())();     }} else
-    if rl.gui_spinner(moved[8], None, unsafe{&mut ASPECT}, 1, 50, (*state).spinner_edit_mode) {
+    if rl.gui_spinner(moved[8], None, unsafe{ addr_of_mut!(ASPECT).as_mut().unwrap() }, 1, 50, (*state).spinner_edit_mode) {
         (*state).spinner_edit_mode = !( (*state).spinner_edit_mode );
     }
 }
