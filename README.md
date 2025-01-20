@@ -19,4 +19,10 @@ just run
 cargo build [--release](optional)
 ```
 
+the executable will be under the `target` directory.
+
+```
+target/(debug or release)/tvstatic
+```
+
 and your done!
